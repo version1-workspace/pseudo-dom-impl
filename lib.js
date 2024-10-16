@@ -25,10 +25,10 @@ class Node {
 }
 
 class Element extends Node {
-  constructor({ tagName, id, className, attributes, children }) {
+  constructor({ tagName, attributes, children }) {
     super();
     this.tagName = tagName;
-    this.attributes = { id, className, ...(attributes || {}) };
+    this.attributes = attributes || {};
     this.children = [];
     children?.forEach((child) => this.append(child));
   }
@@ -46,18 +46,61 @@ class Element extends Node {
     this.appendChild(ele);
   }
 
+  getElementById(id) {
+    for (const node of this.children) {
+      if (node.id === id) {
+        return node;
+      }
+
+      const found = node.getElementById(id);
+      if (found) {
+        return found;
+      }
+    }
+  }
+
+  getElementsByTagName(tagName) {
+    return this.children.reduce((acc, node) => {
+      if (node.tagName === tagName) {
+        return [...acc, node];
+      }
+
+      return [...acc, ...node.getElementsByTagName(tagName)];
+    },[])
+  }
+
+  getElementsByClassName(target) {
+    return this.children.reduce((acc, node) => {
+      const _className = node.getAttribute("class");
+      if (_className === target) {
+        return [...acc, node];
+      }
+
+      return [...acc, ...node.getElementsByClassName(target)];
+    },[])
+  }
+
   querySelector(selector) {
-    return this.children.find((node) => node.tagName === selector);
+    return this.querySelectorAll(selector)[0];
   }
 
   querySelectorAll(selector) {
-    return this.children.filter((node) => node.tagName === selector);
+    if (selector.startsWith(".")) {
+      return this.getElementsByClassName(selector.slice(1)) || [];
+    }
+
+    if (selector.startsWith("#")) {
+      const ele = this.getElementById(selector.slice(1));
+      return ele ? [ele] : [];
+    }
+
+    return this.getElementsByTagName(selector);
   }
 }
 
 class HTMLElement extends Element {
-  constructor({ innerText, tagName, id, className, attributes, children }) {
-    super({ tagName, id, className, attributes, children });
+  constructor({ innerText, tagName, attributes, children }) {
+    super({ tagName, attributes, children });
     this.innerText = innerText;
   }
 
@@ -92,16 +135,14 @@ class HTMLElement extends Element {
 }
 
 class HTMLDivElement extends HTMLElement {
-  constructor({ innerText, id, className, attributes, children }) {
-    super({ innerText, tagName: "div", id, className, attributes, children });
+  constructor({ innerText, attributes, children }) {
+    super({ innerText, tagName: "div", attributes, children });
   }
 }
 
 class HTMLInputElement extends HTMLElement {
-  constructor({ innerText, id, className, value, type, attributes, children }) {
-    super({ innerText, tagName: "input", id, className, attributes, children });
-    this.setAttribute("type", type);
-    this.setAttribute("value", value);
+  constructor({ innerText, attributes, children }) {
+    super({ innerText, tagName: "input", attributes, children });
   }
 
   set value(value) {
@@ -122,14 +163,12 @@ class HTMLInputElement extends HTMLElement {
 }
 
 class HTMLHeadingElement extends HTMLElement {
-  constructor({ innerText, id, tagName, className, attributes, children }) {
-    super({ innerText, tagName, id, className, attributes, children });
+  constructor({ innerText, tagName, attributes, children }) {
+    super({ innerText, tagName, attributes, children });
   }
 }
 
 module.exports = {
-  Element,
-  HTMLElement,
   HTMLDivElement,
   HTMLInputElement,
   HTMLHeadingElement,
