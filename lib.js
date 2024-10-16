@@ -1,3 +1,5 @@
+const helper = require('./helper');
+
 class Node {
   constructor({ childNodes } = {}) {
     this.childNodes = childNodes || [];
@@ -76,27 +78,13 @@ class HTMLElement extends Element {
   }
 
   toString() {
-    const attr = Object.keys(this.attributes)
-      .filter((key) => this.attributes[key])
-      .map((key) => {
-        if (key === "className") {
-          return `class="${this.attributes[key]}"`;
-        }
-
-        return `${key}="${this.attributes[key]}"`;
-      })
-      .join(" ");
-
-    const baseIndent = "  "
-    const indent = baseIndent.repeat(this.depth);
-    const childIndent = baseIndent.repeat(this.depth + 1);
-    const indentIf = (str, space) => (str ? space + str : "");
+    const attr = helper.stringifyAttributes(this.attributes);
 
     return [
-      indentIf(`<${this.tagName}${attr ? " " + attr : ""}>`, indent),
-      indentIf(this.innerText, childIndent),
+      helper.indent(`<${this.tagName}${attr ? " " + attr : ""}>`, this.depth),
+      helper.indent(this.innerText, this.depth + 1),
       this.children.map((child) => child.toString()).join("\n"),
-      indentIf(`</${this.tagName}>`, indent),
+      helper.indent(`</${this.tagName}>`, this.depth),
     ]
       .filter((it) => it)
       .join("\n");

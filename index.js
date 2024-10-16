@@ -33,7 +33,7 @@ function render() {
     children: [h1, row],
   });
 
-   console.log(container.toString());
+  console.log(container.toString());
 }
 
 render();
